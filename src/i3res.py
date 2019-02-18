@@ -44,6 +44,7 @@ class I3ResNet(torch.nn.Module):
         else:
             final_time_dim = int(math.ceil(frame_nb / 16))
             self.avgpool = torch.nn.AdaptiveAvgPool3d((1, 1, 1))
+            self.dropout = torch.nn.Dropout(p=0.3)
             self.fc = inflate.inflate_linear(resnet2d.fc, 1)
 
     def forward(self, x):
@@ -68,6 +69,7 @@ class I3ResNet(torch.nn.Module):
         else:
             x = self.avgpool(x)
             x_reshape = x.view(x.size(0), -1)
+            x_reshape = self.dropout(x_reshape)
             x = self.fc(x_reshape)
         return x
 
