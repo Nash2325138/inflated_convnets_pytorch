@@ -3,7 +3,7 @@ import math
 import torch
 from torch.nn import ReplicationPad3d
 
-from src import inflate
+from ..src import inflate
 
 
 class I3ResNet(torch.nn.Module):
