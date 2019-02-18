@@ -17,13 +17,19 @@ class I3ResNet(torch.nn.Module):
         self.conv_class = conv_class
 
         self.conv1 = inflate.inflate_conv(
-            resnet2d.conv1, time_dim=3, time_padding=1, center=True)
+            resnet2d.conv1, time_dim=5, time_padding=2, center=True)
         self.bn1 = inflate.inflate_batch_norm(resnet2d.bn1)
         self.relu = torch.nn.ReLU(inplace=True)
         self.maxpool = inflate.inflate_pool(
-            resnet2d.maxpool, time_dim=3, time_padding=1, time_stride=2)
+            resnet2d.maxpool, time_dim=1, time_padding=0, time_stride=2)
 
         self.layer1 = inflate_reslayer(resnet2d.layer1)
+        self.maxpool2 = torch.nn.MaxPool3d(
+            (3, 1, 1),
+            padding=(1, 0, 0),
+            stride=(2, 1, 1)
+        )
+
         self.layer2 = inflate_reslayer(resnet2d.layer2)
         self.layer3 = inflate_reslayer(resnet2d.layer3)
         self.layer4 = inflate_reslayer(resnet2d.layer4)
@@ -37,8 +43,7 @@ class I3ResNet(torch.nn.Module):
                 bias=True)
         else:
             final_time_dim = int(math.ceil(frame_nb / 16))
-            self.avgpool = inflate.inflate_pool(
-                resnet2d.avgpool, time_dim=final_time_dim)
+            self.avgpool = torch.nn.AdaptiveAvgPool3d((1, 1, 1))
             self.fc = inflate.inflate_linear(resnet2d.fc, 1)
 
     def forward(self, x):
@@ -48,6 +53,8 @@ class I3ResNet(torch.nn.Module):
         x = self.maxpool(x)
 
         x = self.layer1(x)
+        x = self.maxpool2(x)
+
         x = self.layer2(x)
         x = self.layer3(x)
         x = self.layer4(x)
@@ -80,13 +87,13 @@ class Bottleneck3d(torch.nn.Module):
         spatial_stride = bottleneck2d.conv2.stride[0]
 
         self.conv1 = inflate.inflate_conv(
-            bottleneck2d.conv1, time_dim=1, center=True)
+            bottleneck2d.conv1, time_dim=3, time_padding=1, center=True)
         self.bn1 = inflate.inflate_batch_norm(bottleneck2d.bn1)
 
         self.conv2 = inflate.inflate_conv(
             bottleneck2d.conv2,
-            time_dim=3,
-            time_padding=1,
+            time_dim=1,
+            time_padding=0,
             time_stride=spatial_stride,
             center=True)
         self.bn2 = inflate.inflate_batch_norm(bottleneck2d.bn2)
