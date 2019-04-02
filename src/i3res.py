@@ -7,7 +7,7 @@ from ..src import inflate
 
 
 class I3ResNet(torch.nn.Module):
-    def __init__(self, resnet2d, frame_nb=16, class_nb=1000, conv_class=False):
+    def __init__(self, resnet2d, class_nb=1000, conv_class=False):
         """
         Args:
             conv_class: Whether to use convolutional layer as classifier to
@@ -42,7 +42,6 @@ class I3ResNet(torch.nn.Module):
                 kernel_size=(1, 1, 1),
                 bias=True)
         else:
-            final_time_dim = int(math.ceil(frame_nb / 16))
             self.avgpool = torch.nn.AdaptiveAvgPool3d((1, 1, 1))
             self.dropout = torch.nn.Dropout(p=0.3)
             self.fc = inflate.inflate_linear(resnet2d.fc, 1)
